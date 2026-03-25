@@ -1,41 +1,119 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <title>Jogador - Quiz</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 30px; background: #e0f7fa; }
-        h1 { font-size: 24px; color: #006064; }
-        #tela-login, #tela-jogo { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; margin: 0 auto; }
-        input { width: 90%; padding: 10px; font-size: 18px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; text-align: center;}
-        button.btn-entrar { padding: 10px 20px; font-size: 18px; cursor: pointer; background: #00838f; color: white; border: none; border-radius: 5px; width: 100%; }
-        
-        .botoes-resposta { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px;}
-        .btn-resp { width: 45%; height: 80px; font-size: 16px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; color: white; transition: 0.2s;}
-        .vermelho { background-color: #e53935; }
-        .azul { background-color: #1e88e5; }
-        .amarelo { background-color: #fdd835; color: black;}
-        .verde { background-color: #43a047; }
-        .btn-resp:disabled { opacity: 0.5; cursor: not-allowed; }
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            padding: 30px;
+            background: #e0f7fa;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #006064;
+        }
+
+        #tela-login,
+        #tela-jogo {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        input {
+            width: 90%;
+            padding: 10px;
+            font-size: 18px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        button.btn-entrar {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            background: #00838f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        .botoes-resposta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-resp {
+            width: 45%;
+            min-height: 80px;
+            height: auto;
+            padding: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            color: white;
+            transition: 0.2s;
+            word-wrap: break-word;
+        }
+
+        .vermelho {
+            background-color: #e53935;
+        }
+
+        .azul {
+            background-color: #1e88e5;
+        }
+
+        .amarelo {
+            background-color: #fdd835;
+            color: black;
+        }
+
+        .verde {
+            background-color: #43a047;
+        }
+
+        .btn-resp:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
+
 <body>
     <h1>🎮 Quiz Interativo 🎮</h1>
-    
+
     <div id="tela-login">
         <h2>Entrar na Partida</h2>
-        <input type="text" id="pin-sala" placeholder="PIN da Sala (4 dígitos)" maxlength="4" style="font-weight: bold; letter-spacing: 2px;">
+        <input type="text" id="pin-sala" placeholder="PIN da Sala (4 dígitos)" maxlength="4"
+            style="font-weight: bold; letter-spacing: 2px;">
         <input type="text" id="nome-jogador" placeholder="Seu apelido aqui...">
         <button class="btn-entrar" id="btn-entrar">Entrar no Jogo</button>
     </div>
 
     <div id="tela-jogo" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
             <h3 style="color: #00796b; margin: 0;">Pontos: <span id="meus-pontos">0</span></h3>
             <h3 style="color: #d32f2f; margin: 0;">⏳ <span id="display-tempo">15</span>s</h3>
         </div>
-        
+
         <h2 id="status-pergunta" style="min-height: 60px;">Aguardando o apresentador iniciar...</h2>
 
         <div class="botoes-resposta" id="area-botoes" style="display: none;">
@@ -79,12 +157,16 @@
         let pontos = 0;
         let respostaCertaAtual = -1;
         let tempoRestante = 0;
-        const TEMPO_MAXIMO = 15; 
+        const TEMPO_MAXIMO = 15;
+
+        // As duas travas de segurança mestras
+        let jaRespondeu = false;
+        let jogoBloqueado = true;
 
         const urlParams = new URLSearchParams(window.location.search);
         const salaNaUrl = urlParams.get('sala');
-        
-        if(salaNaUrl) {
+
+        if (salaNaUrl) {
             inputPin.value = salaNaUrl;
             inputPin.style.display = "none";
         }
@@ -93,64 +175,82 @@
             sala = inputPin.value.trim();
             nome = inputNome.value.trim();
 
-            if(sala === "" || nome === "") return alert("Preencha o PIN e seu nome!");
+            if (sala === "" || nome === "") return alert("Preencha o PIN e seu nome!");
 
             telaLogin.style.display = "none";
             telaJogo.style.display = "block";
-            
+
             set(ref(db, `salas/${sala}/jogadores/${nome}`), { pontos: pontos });
             iniciarEscutaDaSala(sala, nome);
         });
 
         function iniciarEscutaDaSala(codigoSala, nomeJogador) {
+
+            // 1. Escuta o Relógio
             onValue(ref(db, `salas/${codigoSala}/estado_jogo/tempo`), (snapshot) => {
-                if(snapshot.exists()) {
+                if (snapshot.exists()) {
                     tempoRestante = snapshot.val();
                     displayTempo.innerText = tempoRestante;
                 }
             });
 
+            // 2. Escuta se o Apresentador bloqueou (fim do tempo) ou liberou
             onValue(ref(db, `salas/${codigoSala}/estado_jogo/bloqueado`), (snapshot) => {
-                if(snapshot.val() === true) {
-                    statusPergunta.innerText = "⏳ O tempo acabou!";
+                jogoBloqueado = snapshot.val();
+
+                if (jogoBloqueado === true) {
+                    if (!jaRespondeu) {
+                        statusPergunta.innerText = "⏳ O tempo acabou!";
+                    }
                     botoes.forEach(btn => {
                         btn.disabled = true;
                         btn.style.opacity = "0.5";
                     });
+                } else if (jogoBloqueado === false && !jaRespondeu) {
+                    // Se o jogo destravou e o jogador ainda não respondeu, libera os botões
+                    botoes.forEach(btn => {
+                        btn.disabled = false;
+                        btn.style.opacity = "1";
+                    });
                 }
             });
 
+            // 3. Escuta a Pergunta
             onValue(ref(db, `salas/${codigoSala}/estado_jogo/pergunta_atual`), (snapshot) => {
                 const dadosPergunta = snapshot.val();
-                
+
                 if (dadosPergunta && dadosPergunta.finalizado) {
                     statusPergunta.innerText = "O jogo acabou! Olhe para a tela principal.";
                     areaBotoes.style.display = "none";
                     return;
                 }
 
-                if(dadosPergunta && dadosPergunta.texto) {
+                if (dadosPergunta && dadosPergunta.texto) {
+                    // INÍCIO DE NOVA RODADA: Destrava o jogador!
+                    jaRespondeu = false;
+
                     statusPergunta.innerText = `Pergunta ${dadosPergunta.numero}: ${dadosPergunta.texto}`;
                     respostaCertaAtual = dadosPergunta.correta;
-                    
-                    // Mostra os botões assim que a primeira pergunta chega
                     areaBotoes.style.display = "flex";
 
                     botoes.forEach((botao, index) => {
-                        botao.disabled = false; 
-                        botao.style.opacity = "1"; 
-                        if(dadosPergunta.alternativas && dadosPergunta.alternativas[index]) {
+                        botao.disabled = false;
+                        botao.style.opacity = "1";
+                        if (dadosPergunta.alternativas && dadosPergunta.alternativas[index]) {
                             botao.innerText = dadosPergunta.alternativas[index];
                         }
                     });
                 }
             });
 
+            // 4. O Clique do Jogador
             botoes.forEach((botao, index) => {
-                const novoBotao = botao.cloneNode(true);
-                botao.parentNode.replaceChild(novoBotao, botao);
-                
-                novoBotao.addEventListener('click', () => {
+                botao.addEventListener('click', () => {
+                    // Impede o clique se ele já respondeu ou se o relógio zerou
+                    if (jaRespondeu || jogoBloqueado) return;
+
+                    jaRespondeu = true; // Trava o celular na mesma hora!
+
                     if (index === respostaCertaAtual) {
                         const pontosGanhos = Math.max(10, Math.round((tempoRestante / TEMPO_MAXIMO) * 100));
                         pontos += pontosGanhos;
@@ -161,7 +261,8 @@
                         statusPergunta.innerText = "Puxa, você errou! 😢";
                     }
 
-                    document.querySelectorAll('.btn-resp').forEach(btn => {
+                    // Escurece e trava os botões visualmente
+                    botoes.forEach(btn => {
                         btn.disabled = true;
                         btn.style.opacity = "0.5";
                     });
@@ -170,4 +271,5 @@
         }
     </script>
 </body>
+
 </html>
