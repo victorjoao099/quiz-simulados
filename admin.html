@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Administração - Criar Quizzes</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 40px;
+            background: #eceff1;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #263238;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            background: #00796b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #004d40;
+        }
+
+        #mensagem {
+            text-align: center;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #388e3c;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Cadastrar Nova Pergunta</h1>
+
+    <div class="form-group">
+        <label for="nome-quiz">Nome do Quiz (Tema):</label>
+        <input type="text" id="nome-quiz" placeholder="Ex: videogames, leitura, logica">
+
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+        <label for="texto-pergunta">Texto da Pergunta:</label>
+        <input type="text" id="texto-pergunta" placeholder="Digite a pergunta aqui...">
+
+        <label>Alternativas:</label>
+        <input type="text" id="alt-0" placeholder="A (Primeira opção)">
+        <input type="text" id="alt-1" placeholder="B (Segunda opção)">
+        <input type="text" id="alt-2" placeholder="C (Terceira opção)">
+        <input type="text" id="alt-3" placeholder="D (Quarta opção)">
+
+        <label for="resposta-correta">Qual é a alternativa correta?</label>
+        <select id="resposta-correta">
+            <option value="0">Alternativa A</option>
+            <option value="1">Alternativa B</option>
+            <option value="2">Alternativa C</option>
+            <option value="3">Alternativa D</option>
+        </select>
+    </div>
+
+    <button id="btn-salvar">Salvar no Banco de Dados</button>
+    <div id="mensagem">Pergunta salva com sucesso! 🎉</div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        // COLOQUE SUAS CHAVES DO FIREBASE AQUI
+        const firebaseConfig = {
+            apiKey: "AIzaSyBD3Vt_wy9GlbomKVRrqxIUq6GmcPFZG8g",
+            authDomain: "quiz-simulador.firebaseapp.com",
+            projectId: "quiz-simulador",
+            storageBucket: "quiz-simulador.firebasestorage.app",
+            messagingSenderId: "690247855064",
+            appId: "1:690247855064:web:9a7dc8ef1dbf50f386a0ad"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const btnSalvar = document.getElementById('btn-salvar');
+        const mensagem = document.getElementById('mensagem');
+
+        btnSalvar.addEventListener('click', () => {
+            // Pega o nome do quiz, tira os espaços em branco e deixa tudo minúsculo para padronizar
+            const nomeQuiz = document.getElementById('nome-quiz').value.trim().toLowerCase().replace(/\s+/g, '');
+            const texto = document.getElementById('texto-pergunta').value;
+            const alt0 = document.getElementById('alt-0').value;
+            const alt1 = document.getElementById('alt-1').value;
+            const alt2 = document.getElementById('alt-2').value;
+            const alt3 = document.getElementById('alt-3').value;
+            const correta = parseInt(document.getElementById('resposta-correta').value);
+
+            if (!nomeQuiz || !texto || !alt0 || !alt1 || !alt2 || !alt3) {
+                alert("Por favor, preencha todos os campos e dê um nome para o quiz!");
+                return;
+            }
+
+            const novaPergunta = {
+                texto: texto,
+                alternativas: [alt0, alt1, alt2, alt3],
+                correta: correta
+            };
+
+            // Salva dentro da "pasta" do tema escolhido
+            const referenciaPerguntas = ref(db, 'quizzes/' + nomeQuiz);
+            push(referenciaPerguntas, novaPergunta)
+                .then(() => {
+                    mensagem.style.display = 'block';
+                    setTimeout(() => { mensagem.style.display = 'none'; }, 3000);
+
+                    // Limpa os campos da pergunta, mas mantém o nome do quiz para facilitar novos cadastros
+                    document.getElementById('texto-pergunta').value = '';
+                    document.getElementById('alt-0').value = '';
+                    document.getElementById('alt-1').value = '';
+                    document.getElementById('alt-2').value = '';
+                    document.getElementById('alt-3').value = '';
+                    document.getElementById('resposta-correta').value = '0';
+                })
+                .catch((error) => alert("Erro ao salvar: " + error));
+        });
+    </script>
+</body>
+
+</html>

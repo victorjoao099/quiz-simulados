@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Apresentador - Quiz</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            padding: 30px;
+            background: #263238;
+            color: white;
+        }
+
+        h1 {
+            font-size: 36px;
+            color: #4fc3f7;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 28px;
+            font-weight: normal;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 20px;
+            cursor: pointer;
+            background: #ffca28;
+            color: #333;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #ffb300;
+            transform: scale(1.05);
+        }
+
+        button:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        #menu-carregamento {
+            background: #37474f;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            margin: 0 auto 20px;
+        }
+
+        #mensagem-carregamento {
+            color: #ffca28;
+            font-weight: bold;
+            display: none;
+        }
+
+        /* Painel da Sala de Espera com QR Code */
+        #info-sala {
+            display: none;
+            background: #004d40;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px dashed #69f0ae;
+            max-width: 600px;
+            margin: 0 auto 20px;
+        }
+
+        .container-codigo {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .pin-destaque {
+            font-size: 45px;
+            color: #69f0ae;
+            font-weight: bold;
+            letter-spacing: 5px;
+            margin-top: 5px;
+        }
+
+        .link-destaque {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 16px;
+            user-select: all;
+        }
+
+        #display-timer {
+            color: #ff5252;
+            font-size: 45px;
+            font-weight: bold;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .area-placar {
+            background: #37474f;
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 600px;
+            margin: 20px auto 0;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+        }
+
+        #lista-placar {
+            position: relative;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            transition: height 0.5s;
+        }
+
+        .jogador-item {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background: #fff;
+            color: #333;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            padding: 0 20px;
+            font-size: 22px;
+            font-weight: bold;
+            transition: top 0.5s ease-in-out, background-color 0.5s ease;
+        }
+
+        .jogador-item.subiu {
+            background-color: #69f0ae;
+            color: #004d40;
+        }
+
+        .jogador-item.desceu {
+            background-color: #ff8a80;
+            color: #b71c1c;
+        }
+
+        #tela-podio {
+            display: none;
+            background: #37474f;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 700px;
+            margin: 40px auto;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+        }
+
+        #podio-vencedores {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 20px;
+            height: 300px;
+            margin-top: 40px;
+        }
+
+        .coluna-podio {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            width: 120px;
+        }
+
+        .barra-podio {
+            width: 100%;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 15px;
+            box-sizing: border-box;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .ouro {
+            background: linear-gradient(to bottom, #ffd700, #fbc02d);
+            height: 220px;
+        }
+
+        .prata {
+            background: linear-gradient(to bottom, #e0e0e0, #9e9e9e);
+            height: 160px;
+        }
+
+        .bronze {
+            background: linear-gradient(to bottom, #ffb04c, #f57c00);
+            height: 110px;
+        }
+
+        .nome-podio {
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-align: center;
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pontos-podio {
+            color: #ffca28;
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .medalha {
+            font-size: 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🚀 Super Quiz 🚀</h1>
+
+    <div id="menu-carregamento">
+        <h3 style="margin-top: 0; color: white;">Preparar Rodada</h3>
+        <input type="text" id="input-tema" placeholder="Qual quiz quer jogar? (ex: logica)"
+            style="padding: 10px; font-size: 18px; width: 80%; margin-bottom: 10px; border-radius: 5px; border: none;">
+        <br>
+        <button id="btn-carregar-quiz" style="margin-top: 0; background: #4caf50; color: white;">Criar Sala</button>
+    </div>
+
+    <h2 id="mensagem-carregamento">A carregar...</h2>
+
+    <div id="info-sala">
+        <h2 style="color: #ffca28; margin-top: 0;">Sala de Espera</h2>
+        <div class="container-codigo">
+            <div style="text-align: left;">
+                <h3 style="margin: 0 0 5px 0; color: white;">Acessem o link:</h3>
+                <div class="link-destaque" id="link-jogador">carregando...</div>
+                <h3 style="margin: 20px 0 0 0; color: white;">Ou usem o PIN:</h3>
+                <div class="pin-destaque" id="display-pin">0000</div>
+            </div>
+            <div style="background: white; padding: 10px; border-radius: 10px;">
+                <img id="qr-code-img" src="" alt="QR Code" width="150" height="150">
+            </div>
+        </div>
+        <button id="btn-iniciar-jogo"
+            style="background: #e53935; color: white; width: 100%; padding: 20px; font-size: 24px;">Começar a
+            Partida!</button>
+    </div>
+
+    <div id="area-jogo" style="display: none;">
+        <h2><span id="numero-pergunta"></span></h2>
+        <div id="display-timer">⏳ 15s</div>
+        <button id="btn-proxima">Avançar para a Próxima Pergunta</button>
+    </div>
+
+    <div class="area-placar" id="area-placar" style="display: none;">
+        <h2 style="margin-top: 0; color: #ffca28;">🏆 Jogadores na Sala 🏆</h2>
+        <ul id="lista-placar"></ul>
+    </div>
+
+    <div id="tela-podio">
+        <h2 style="color: #ffca28; font-size: 45px; margin: 0;">🎉 Fim do Jogo! 🎉</h2>
+        <div id="podio-vencedores"></div>
+        <button id="btn-reiniciar"
+            style="background: #e53935; color: white; margin-top: 40px; padding: 15px 40px;">Encerrar Sala</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue, get, child, remove } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        // COLOQUE AS SUAS CHAVES DO FIREBASE AQUI
+        const firebaseConfig = {
+            apiKey: "AIzaSyBD3Vt_wy9GlbomKVRrqxIUq6GmcPFZG8g",
+            authDomain: "quiz-simulador.firebaseapp.com",
+            projectId: "quiz-simulador",
+            storageBucket: "quiz-simulador.firebasestorage.app",
+            messagingSenderId: "690247855064",
+            appId: "1:690247855064:web:9a7dc8ef1dbf50f386a0ad"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let bancoDePerguntas = [];
+        let indiceAtual = 0;
+        let posicoesAnteriores = {};
+        let listaGlobalJogadores = [];
+        let pinSala = "";
+
+        const TEMPO_MAXIMO = 15;
+        let tempoAtual = 0;
+        let cronometro;
+
+        const displayPergunta = document.getElementById('numero-pergunta');
+        const displayTimer = document.getElementById('display-timer');
+        const btnProxima = document.getElementById('btn-proxima');
+        const msgCarregamento = document.getElementById('mensagem-carregamento');
+        const listaPlacar = document.getElementById('lista-placar');
+        const btnCarregarQuiz = document.getElementById('btn-carregar-quiz');
+        const inputTema = document.getElementById('input-tema');
+        const areaJogo = document.getElementById('area-jogo');
+        const areaPlacar = document.getElementById('area-placar');
+        const telaPodio = document.getElementById('tela-podio');
+        const podioVencedores = document.getElementById('podio-vencedores');
+        const btnReiniciar = document.getElementById('btn-reiniciar');
+        const infoSala = document.getElementById('info-sala');
+        const displayPin = document.getElementById('display-pin');
+        const linkJogadorDisplay = document.getElementById('link-jogador');
+        const qrCodeImg = document.getElementById('qr-code-img');
+        const btnIniciarJogo = document.getElementById('btn-iniciar-jogo');
+
+        btnCarregarQuiz.addEventListener('click', () => {
+            const tema = inputTema.value.trim().toLowerCase().replace(/\s+/g, '');
+            if (tema === "") return alert("Digite o nome do quiz!");
+
+            msgCarregamento.style.display = "block";
+            msgCarregamento.innerText = "A procurar o quiz: " + tema + "...";
+
+            get(child(ref(db), 'quizzes/' + tema)).then((snapshot) => {
+                if (snapshot.exists()) {
+                    bancoDePerguntas = Object.values(snapshot.val());
+                    msgCarregamento.style.display = "none";
+                    document.getElementById('menu-carregamento').style.display = "none";
+
+                    pinSala = Math.floor(1000 + Math.random() * 9000).toString();
+
+                    const urlBase = window.location.href.split('apresentador.html')[0];
+                    const linkCompleto = `${urlBase}jogador.html?sala=${pinSala}`;
+
+                    displayPin.innerText = pinSala;
+                    linkJogadorDisplay.innerText = linkCompleto;
+
+                    // Geração do QR Code via API gratuita
+                    qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(linkCompleto)}`;
+
+                    infoSala.style.display = "block";
+                    areaPlacar.style.display = "block";
+
+                    // Começa a escutar o placar para ver a galera entrando na sala de espera
+                    iniciarEscutaPlacar();
+                } else {
+                    msgCarregamento.innerText = "Nenhum quiz encontrado com este nome!";
+                }
+            });
+        });
+
+        // NOVO: Botão que dispara a primeira pergunta e fecha a sala de espera
+        btnIniciarJogo.addEventListener('click', () => {
+            btnIniciarJogo.style.display = "none"; // Esconde o botão de iniciar
+            infoSala.style.border = "none"; // Tira a borda tracejada
+            areaJogo.style.display = "block";
+            btnProxima.disabled = false;
+
+            // Muda o título do placar
+            document.querySelector('#area-placar h2').innerText = "🏆 Top 5 ao Vivo 🏆";
+
+            indiceAtual = 0;
+            enviarPerguntaParaFirebase(indiceAtual);
+        });
+
+        function iniciarCronometro() {
+            clearInterval(cronometro);
+            tempoAtual = TEMPO_MAXIMO;
+            displayTimer.style.display = "block";
+            displayTimer.innerText = `⏳ ${tempoAtual}s`;
+
+            set(ref(db, `salas/${pinSala}/estado_jogo/tempo`), tempoAtual);
+            set(ref(db, `salas/${pinSala}/estado_jogo/bloqueado`), false);
+
+            cronometro = setInterval(() => {
+                tempoAtual--;
+                displayTimer.innerText = `⏳ ${tempoAtual}s`;
+                set(ref(db, `salas/${pinSala}/estado_jogo/tempo`), tempoAtual);
+
+                if (tempoAtual <= 0) {
+                    clearInterval(cronometro);
+                    displayTimer.innerText = "⏳ Tempo Esgotado!";
+                    set(ref(db, `salas/${pinSala}/estado_jogo/bloqueado`), true);
+                }
+            }, 1000);
+        }
+
+        function enviarPerguntaParaFirebase(indice) {
+            if (indice < bancoDePerguntas.length) {
+                const perguntaDaVez = bancoDePerguntas[indice];
+                set(ref(db, `salas/${pinSala}/estado_jogo/pergunta_atual`), {
+                    numero: indice + 1,
+                    texto: perguntaDaVez.texto,
+                    alternativas: perguntaDaVez.alternativas,
+                    correta: perguntaDaVez.correta,
+                    finalizado: false
+                });
+                displayPergunta.innerText = `Pergunta ${indice + 1}: ${perguntaDaVez.texto}`;
+                iniciarCronometro();
+            } else {
+                clearInterval(cronometro);
+                set(ref(db, `salas/${pinSala}/estado_jogo/pergunta_atual`), { finalizado: true });
+                set(ref(db, `salas/${pinSala}/estado_jogo/bloqueado`), true);
+
+                infoSala.style.display = "none";
+                areaJogo.style.display = "none";
+                areaPlacar.style.display = "none";
+                telaPodio.style.display = "block";
+
+                montarPodioFinal();
+            }
+        }
+
+        btnProxima.addEventListener('click', () => {
+            indiceAtual++;
+            enviarPerguntaParaFirebase(indiceAtual);
+        });
+
+        function montarPodioFinal() {
+            podioVencedores.innerHTML = "";
+            const top3 = listaGlobalJogadores.slice(0, 3);
+            const ordemPodio = [1, 0, 2];
+
+            ordemPodio.forEach(posicao => {
+                if (top3[posicao]) {
+                    const jogador = top3[posicao];
+                    let classe = posicao === 0 ? 'ouro' : (posicao === 1 ? 'prata' : 'bronze');
+                    let medalha = posicao === 0 ? '🥇' : (posicao === 1 ? '🥈' : '🥉');
+
+                    podioVencedores.innerHTML += `
+                        <div class="coluna-podio">
+                            <div class="nome-podio">${jogador.nome}</div>
+                            <div class="pontos-podio">${jogador.pontos} pts</div>
+                            <div class="barra-podio ${classe}"><span class="medalha">${medalha}</span></div>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        btnReiniciar.addEventListener('click', () => {
+            if (confirm("Deseja encerrar esta sala definitivamente?")) {
+                remove(ref(db, `salas/${pinSala}`)).then(() => { window.location.reload(); });
+            }
+        });
+
+        function iniciarEscutaPlacar() {
+            onValue(ref(db, `salas/${pinSala}/jogadores`), (snapshot) => {
+                const dadosJogadores = snapshot.val();
+                if (dadosJogadores) {
+                    const arrayJogadores = Object.entries(dadosJogadores).map(([nome, dados]) => {
+                        return { nome: nome, pontos: dados.pontos };
+                    });
+                    arrayJogadores.sort((a, b) => b.pontos - a.pontos);
+                    listaGlobalJogadores = arrayJogadores;
+                    const top5Jogadores = arrayJogadores.slice(0, 5);
+
+                    listaPlacar.style.height = (top5Jogadores.length * 60) + "px";
+                    const itensAtuais = Array.from(listaPlacar.children);
+
+                    top5Jogadores.forEach((jogador, rankAtual) => {
+                        const idSeguro = 'jog-' + jogador.nome.replace(/\s+/g, '-');
+                        let itemLista = document.getElementById(idSeguro);
+
+                        if (!itemLista) {
+                            itemLista = document.createElement('li');
+                            itemLista.id = idSeguro;
+                            itemLista.className = 'jogador-item';
+                            listaPlacar.appendChild(itemLista);
+                        }
+
+                        itemLista.innerHTML = `<span>#${rankAtual + 1} ${jogador.nome}</span> <span>${jogador.pontos} pts</span>`;
+
+                        const rankAnterior = posicoesAnteriores[jogador.nome];
+                        if (rankAnterior !== undefined) {
+                            if (rankAtual < rankAnterior) {
+                                itemLista.classList.add('subiu');
+                                setTimeout(() => itemLista.classList.remove('subiu'), 1000);
+                            } else if (rankAtual > rankAnterior) {
+                                itemLista.classList.add('desceu');
+                                setTimeout(() => itemLista.classList.remove('desceu'), 1000);
+                            }
+                        }
+                        itemLista.style.top = (rankAtual * 60) + "px";
+                        posicoesAnteriores[jogador.nome] = rankAtual;
+                    });
+
+                    itensAtuais.forEach(item => {
+                        const idAindaNoTop5 = top5Jogadores.some(j => 'jog-' + j.nome.replace(/\s+/g, '-') === item.id);
+                        if (!idAindaNoTop5) item.remove();
+                    });
+                } else {
+                    listaPlacar.innerHTML = "";
+                    listaPlacar.style.height = "0px";
+                    listaGlobalJogadores = [];
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
